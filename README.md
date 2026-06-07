@@ -1,6 +1,6 @@
 # ghas-mcp
 
-A [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server that exposes **GitHub Advanced Security** alerts to AI assistants. Written in Go — ships as a single static binary with no runtime dependencies.
+A [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server that exposes **GitHub Advanced Security** alerts to AI assistants. Written in Go - ships as a single static binary with no runtime dependencies.
 
 Ask your AI assistant things like:
 
@@ -17,7 +17,7 @@ Ask your AI assistant things like:
 | `get-code-scanning-alert` | repo | Full alert: rule description, CWE tags, file + line, dismissal history |
 | `list-dependabot-alerts` | repo or org | List alerts with CVSS score, EPSS %, ecosystem, first patched version |
 | `get-dependabot-alert` | repo | Full advisory: description, CVSS vector, EPSS, CWEs, version range |
-| `list-secret-scanning-alerts` | repo or org | List by state / secret type — **actual secret values are never returned** |
+| `list-secret-scanning-alerts` | repo or org | List by state / secret type - **actual secret values are never returned** |
 
 All tools are **read-only**.
 
@@ -28,13 +28,13 @@ All tools are **read-only**.
 
 ## Installation
 
-### Option 1 — go install
+### Option 1 - go install
 
 ```sh
 go install github.com/dipsylala/ghas-mcp@latest
 ```
 
-### Option 2 — release binary
+### Option 2 - release binary
 
 Download the binary for your platform from [Releases](https://github.com/dipsylala/ghas-mcp/releases) and place it somewhere on your `PATH`.
 
@@ -47,7 +47,7 @@ Download the binary for your platform from [Releases](https://github.com/dipsyla
 | Linux (amd64) | `ghas-mcp-linux-amd64` |
 | Linux (arm64) | `ghas-mcp-linux-arm64` |
 
-### Option 3 — build from source
+### Option 3 - build from source
 
 ```sh
 git clone https://github.com/dipsylala/ghas-mcp
@@ -60,7 +60,7 @@ go build -o ghas-mcp .
 The server resolves a GitHub token in this order:
 
 1. `GITHUB_TOKEN` environment variable
-2. `gh auth token` — the active gh CLI session (run `gh auth login` once to set it up; works on all platforms including Windows)
+2. `gh auth token` - the active gh CLI session (run `gh auth login` once to set it up; works on all platforms including Windows)
 
 ### Token scopes required
 
@@ -76,7 +76,7 @@ A single classic PAT with `security_events` covers all three alert types. Fine-g
 
 ## MCP client configuration
 
-### VS Code — `.vscode/mcp.json`
+### VS Code - `.vscode/mcp.json`
 
 ```json
 {
@@ -92,20 +92,25 @@ A single classic PAT with `security_events` covers all three alert types. Fine-g
 }
 ```
 
-### Claude Desktop — `claude_desktop_config.json`
+> **Warning:** Do not paste a raw token value (`ghp_...`) into `.vscode/mcp.json`. Keep the `${env:GITHUB_TOKEN}` reference and set `GITHUB_TOKEN` in your shell or system environment instead. Alternatively, omit the `env` block entirely and use `gh auth login`. `.vscode/mcp.json` is in `.gitignore` - do not force-add it to git.
+
+### Claude Desktop - `claude_desktop_config.json`
+
+The recommended approach is to rely on the `gh` CLI - run `gh auth login` once and omit the `env` block entirely:
 
 ```json
 {
   "mcpServers": {
     "ghas": {
-      "command": "ghas-mcp",
-      "env": {
-        "GITHUB_TOKEN": "ghp_your_token_here"
-      }
+      "command": "ghas-mcp"
     }
   }
 }
 ```
+
+If you need to pass a token explicitly, set `GITHUB_TOKEN` in your shell profile (`.bashrc`, `.zshrc`, Windows system environment variables, etc.) before launching Claude Desktop. Claude Desktop does not support variable interpolation in its config, so the token must already be present in the process environment - not embedded in the JSON file.
+
+> **Warning:** Do not paste a raw token value (`ghp_...`) directly into `claude_desktop_config.json`. It is a plaintext file that may be synced by cloud backup tools (iCloud, Dropbox, etc.).
 
 ### Cursor / other clients
 
@@ -157,9 +162,12 @@ Produces binaries for all five platforms in `dist/`.
 
 ## Security notes
 
-- Secret values are **never** returned by any tool — only metadata (type, state, validity flag).
+- Secret values are **never** returned by any tool - only metadata (type, state, validity flag).
 - The server is read-only. It cannot dismiss, reopen, or modify any alert.
 - Token is read once at startup from the environment; it is never logged.
+- **Never hardcode a token** in an MCP client config file. For VS Code, use the `${env:GITHUB_TOKEN}` reference (VS Code resolves this on all platforms). For other clients, set `GITHUB_TOKEN` in the system/shell environment before launching, or use `gh auth login`.
+- `.vscode/mcp.json` is in `.gitignore`. Do not force-add it to version control with a token value inside.
+- **stdio transport only.** The server deliberately does not expose an HTTP/SSE listener. stdio means the token stays in the process environment, no network port is opened, and no additional authentication layer is needed for the MCP endpoint itself. If you need remote/multi-client access, you would also need to secure the MCP endpoint - that is out of scope for this tool.
 
 ## License
 

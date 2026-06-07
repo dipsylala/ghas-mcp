@@ -10,8 +10,7 @@ go.work
 go.work.sum
 
 # IDE
-.vscode/*
-!.vscode/mcp.json
+.vscode/
 .idea/
 
 # Logs

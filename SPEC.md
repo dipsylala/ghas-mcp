@@ -1,4 +1,4 @@
-# ghas-mcp — Tool Specification
+# ghas-mcp - Tool Specification
 
 This document is the authoritative reference for AI assistants using the ghas-mcp MCP server.
 It describes every tool, its parameters, response fields, known constraints, and recommended usage patterns.
@@ -21,8 +21,9 @@ ghas-mcp exposes five read-only tools covering three GitHub Advanced Security al
 - **Pagination**: All list tools automatically page through the full result set (up to 2000 items). There is no need to request pages manually.
 - **Authentication**: The server resolves `GITHUB_TOKEN` from the environment, then falls back to running `gh auth token` (the active gh CLI session). If neither is present, tools return an `error` field.
 - **Personal accounts vs organisations**: Org-level queries (omitting `repo`) use the `/orgs/{owner}/...` GitHub API endpoint, which only works for GitHub organisations. For personal accounts, always supply a `repo` parameter.
-- **Secret values**: Secret scanning tools never return the actual secret string — only metadata.
+- **Secret values**: Secret scanning tools never return the actual secret string - only metadata.
 - **Write operations**: No tool modifies any alert. Dismissal or state changes must be done via the GitHub UI or API.
+- **Transport**: stdio only. The server does not expose an HTTP or SSE listener. This is intentional — stdio keeps the GitHub token in the process environment, opens no network port, and requires no additional authentication layer for the MCP endpoint itself. HTTP/SSE transport is out of scope.
 
 ---
 
@@ -36,12 +37,12 @@ Returns a list of code scanning alerts for a repository or organisation, with on
 
 | Name | Type | Required | Allowed values | Description |
 | --- | --- | --- | --- | --- |
-| `owner` | string | yes | — | GitHub org or user name |
-| `repo` | string | no | — | Repository name (without owner). Omit for org scope |
+| `owner` | string | yes | - | GitHub org or user name |
+| `repo` | string | no | - | Repository name (without owner). Omit for org scope |
 | `state` | string | no | `open` `dismissed` `fixed` | Filter by alert state (default: all) |
 | `severity` | string | no | `critical` `high` `medium` `low` `warning` `note` `error` | Filter by security severity |
-| `tool_name` | string | no | — | Filter by analysis tool (e.g. `CodeQL`, `Semgrep`) |
-| `ref` | string | no | — | Git ref (e.g. `refs/heads/main`) |
+| `tool_name` | string | no | - | Filter by analysis tool (e.g. `CodeQL`, `Semgrep`) |
+| `ref` | string | no | - | Git ref (e.g. `refs/heads/main`) |
 
 #### Response fields
 
@@ -140,12 +141,12 @@ Returns a list of Dependabot vulnerability alerts for a repository or organisati
 
 | Name | Type | Required | Allowed values | Description |
 | --- | --- | --- | --- | --- |
-| `owner` | string | yes | — | GitHub org or user name |
-| `repo` | string | no | — | Repository name. Omit for org scope |
+| `owner` | string | yes | - | GitHub org or user name |
+| `repo` | string | no | - | Repository name. Omit for org scope |
 | `state` | string | no | `open` `dismissed` `fixed` `auto_dismissed` | Filter by state (default: all) |
 | `severity` | string | no | `low` `medium` `high` `critical` | Filter by severity |
-| `ecosystem` | string | no | — | Package ecosystem: `npm` `pip` `maven` `rubygems` `nuget` `cargo` `composer` `go` `rust` `pub` |
-| `package` | string | no | — | Exact package name (e.g. `lodash`) |
+| `ecosystem` | string | no | - | Package ecosystem: `npm` `pip` `maven` `rubygems` `nuget` `cargo` `composer` `go` `rust` `pub` |
+| `package` | string | no | - | Exact package name (e.g. `lodash`) |
 
 #### Response fields
 
@@ -245,10 +246,10 @@ Returns metadata for secret scanning alerts. **The actual secret value is never 
 
 | Name | Type | Required | Allowed values | Description |
 | --- | --- | --- | --- | --- |
-| `owner` | string | yes | — | GitHub org or user name |
-| `repo` | string | no | — | Repository name. Omit for org scope |
+| `owner` | string | yes | - | GitHub org or user name |
+| `repo` | string | no | - | Repository name. Omit for org scope |
 | `state` | string | no | `open` `resolved` | Filter by state (default: all) |
-| `secret_type` | string | no | — | Secret type slug (see [GitHub docs](https://docs.github.com/en/code-security/secret-scanning/introduction/supported-secret-scanning-patterns)) |
+| `secret_type` | string | no | - | Secret type slug (see [GitHub docs](https://docs.github.com/en/code-security/secret-scanning/introduction/supported-secret-scanning-patterns)) |
 
 #### Response fields
 
@@ -278,7 +279,7 @@ Returns metadata for secret scanning alerts. **The actual secret value is never 
 #### Notes
 
 - `validity` reflects whether GitHub has verified that the token is still active with the issuing service. `active` means the secret is live and poses immediate risk.
-- `publicly_leaked` is a strong indicator of priority — the secret has been exposed to the internet.
+- `publicly_leaked` is a strong indicator of priority - the secret has been exposed to the internet.
 - `push_protection_bypassed` means the committer explicitly overrode a push protection block to commit the secret.
 - To look up valid `secret_type` slugs, see [GitHub's supported patterns list](https://docs.github.com/en/code-security/secret-scanning/introduction/supported-secret-scanning-patterns).
 
@@ -308,10 +309,10 @@ Returns metadata for secret scanning alerts. **The actual secret value is never 
 
 When triaging secret scanning alerts, prioritise by:
 
-1. `validity == "active"` — the secret is confirmed live
-2. `publicly_leaked == true` — the secret has been public
-3. `push_protection_bypassed == true` — bypassed a control, indicating intent
-4. `multi_repo == true` — the same secret appears across multiple repositories
+1. `validity == "active"` - the secret is confirmed live
+2. `publicly_leaked == true` - the secret has been public
+3. `push_protection_bypassed == true` - bypassed a control, indicating intent
+4. `multi_repo == true` - the same secret appears across multiple repositories
 
 ---
 
@@ -331,7 +332,7 @@ Common errors:
 | `GitHub API error 401` | Token is invalid or expired |
 | `GitHub API error 403` | Token lacks the required scope for this alert type |
 | `GitHub API error 404` (repo query) | Repository does not exist or is not accessible to the token |
-| `GitHub API error 404` (org query) | The `owner` is a personal account, not a GitHub organisation — supply a `repo` parameter |
+| `GitHub API error 404` (org query) | The `owner` is a personal account, not a GitHub organisation - supply a `repo` parameter |
 | `GitHub API error 422` | Invalid filter value (check allowed values for `state`, `severity`, etc.) |
 
 ---
