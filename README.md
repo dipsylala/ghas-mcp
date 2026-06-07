@@ -1,0 +1,162 @@
+# ghas-mcp
+
+A [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server that exposes **GitHub Advanced Security** alerts to AI assistants. Written in Go — ships as a single static binary with no runtime dependencies.
+
+Ask your AI assistant things like:
+
+- *"List all critical Dependabot alerts in my-org/api-service"*
+- *"What CWE is code scanning alert #42 in my-org/api-service? Which file is it in?"*
+- *"Are there any actively valid leaked secrets in the my-org organisation?"*
+- *"Which npm packages across my org have critical CVEs and no fix available?"*
+
+## Tools
+
+| Tool | Scope | Description |
+| --- | --- | --- |
+| `list-code-scanning-alerts` | repo or org | List alerts, filter by state / severity / tool / ref |
+| `get-code-scanning-alert` | repo | Full alert: rule description, CWE tags, file + line, dismissal history |
+| `list-dependabot-alerts` | repo or org | List alerts with CVSS score, EPSS %, ecosystem, first patched version |
+| `get-dependabot-alert` | repo | Full advisory: description, CVSS vector, EPSS, CWEs, version range |
+| `list-secret-scanning-alerts` | repo or org | List by state / secret type — **actual secret values are never returned** |
+
+All tools are **read-only**.
+
+## Prerequisites
+
+- A GitHub account with GHAS features enabled on your repositories or organisation
+- A GitHub personal access token (see [Authentication](#authentication))
+
+## Installation
+
+### Option 1 — go install
+
+```sh
+go install github.com/dipsylala/ghas-mcp@latest
+```
+
+### Option 2 — release binary
+
+Download the binary for your platform from [Releases](https://github.com/dipsylala/ghas-mcp/releases) and place it somewhere on your `PATH`.
+
+| Platform | File |
+|---|---|
+| Windows (amd64) | `ghas-mcp-windows-amd64.exe` |
+| Windows (arm64) | `ghas-mcp-windows-arm64.exe` |
+| macOS (Apple Silicon) | `ghas-mcp-darwin-arm64` |
+| macOS (Intel) | `ghas-mcp-darwin-amd64` |
+| Linux (amd64) | `ghas-mcp-linux-amd64` |
+| Linux (arm64) | `ghas-mcp-linux-arm64` |
+
+### Option 3 — build from source
+
+```sh
+git clone https://github.com/dipsylala/ghas-mcp
+cd ghas-mcp
+go build -o ghas-mcp .
+```
+
+## Authentication
+
+The server resolves a GitHub token in this order:
+
+1. `GITHUB_TOKEN` environment variable
+2. `gh auth token` — the active gh CLI session (run `gh auth login` once to set it up; works on all platforms including Windows)
+
+### Token scopes required
+
+| Alert type | Classic PAT | Fine-grained PAT |
+|---|---|---|
+| Code scanning | `security_events` | Code scanning alerts: **Read** |
+| Dependabot | `security_events` | Dependabot alerts: **Read** |
+| Secret scanning | `security_events` | Secret scanning alerts: **Read** |
+
+A single classic PAT with `security_events` covers all three alert types. Fine-grained PATs require each permission individually and must be scoped to the relevant repositories or organisation.
+
+> **Note:** Dependabot alerts also require the repository to have the Dependency graph enabled (it is on by default for public repos).
+
+## MCP client configuration
+
+### VS Code — `.vscode/mcp.json`
+
+```json
+{
+  "servers": {
+    "ghas": {
+      "type": "stdio",
+      "command": "ghas-mcp",
+      "env": {
+        "GITHUB_TOKEN": "${env:GITHUB_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+### Claude Desktop — `claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "ghas": {
+      "command": "ghas-mcp",
+      "env": {
+        "GITHUB_TOKEN": "ghp_your_token_here"
+      }
+    }
+  }
+}
+```
+
+### Cursor / other clients
+
+Any MCP-compatible client that supports `stdio` transport works. Set `command` to the binary path and pass the token via the `GITHUB_TOKEN` environment variable.
+
+## Flags
+
+| Flag | Description |
+|---|---|
+| `--version` | Print version and exit |
+| `--verbose` | Write logs to stderr |
+| `--log <path>` | Write logs to a file instead of stderr |
+
+Logging is disabled by default so it does not interfere with the stdio JSON-RPC transport. Enable it with `--verbose` or `--log` when debugging.
+
+## Example prompts
+
+```
+Show me all open code scanning alerts in my-org/api-service
+```
+```
+What is the full detail of code scanning alert #12 in my-org/api-service?
+Include the CWE, the file, and whether it has been dismissed.
+```
+```
+List all critical Dependabot alerts across the my-org organisation.
+Group them by ecosystem.
+```
+```
+Is the lodash vulnerability in my-org/frontend fixed yet?
+What version should I upgrade to?
+```
+```
+Are there any open secret scanning alerts in my-org/backend that
+involve tokens which are still active?
+```
+
+## Building release binaries
+
+```powershell
+.\build.ps1 -Version 1.0.0
+```
+
+Produces binaries for all five platforms in `dist/`.
+
+## Security notes
+
+- Secret values are **never** returned by any tool — only metadata (type, state, validity flag).
+- The server is read-only. It cannot dismiss, reopen, or modify any alert.
+- Token is read once at startup from the environment; it is never logged.
+
+## License
+
+MIT

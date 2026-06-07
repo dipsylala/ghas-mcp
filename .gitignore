@@ -1,0 +1,22 @@
+# Binaries
+dist/
+
+# Build artifacts
+*.exe
+*.test
+
+# Go workspace
+go.work
+go.work.sum
+
+# IDE
+.vscode/*
+!.vscode/mcp.json
+.idea/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

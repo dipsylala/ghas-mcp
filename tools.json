@@ -1,0 +1,171 @@
+{
+  "tools": [
+    {
+      "name": "list-code-scanning-alerts",
+      "description": "List GitHub Advanced Security code scanning alerts for a repository or organisation. Returns alert number, state, severity, rule ID/name, tool name, file location, and a link. Use owner + repo for repository scope; omit repo for org-level. Requires the token to have the 'security_events' scope (classic PAT) or 'Code scanning alerts: Read' (fine-grained PAT).",
+      "params": [
+        {
+          "name": "owner",
+          "type": "string",
+          "isRequired": true,
+          "description": "GitHub organisation or user name (e.g. 'octocat' or 'my-org')"
+        },
+        {
+          "name": "repo",
+          "type": "string",
+          "isRequired": false,
+          "description": "Repository name without owner (e.g. 'Hello-World'). Omit to query org-level alerts."
+        },
+        {
+          "name": "state",
+          "type": "string",
+          "isRequired": false,
+          "allowedValues": ["open", "dismissed", "fixed"],
+          "description": "Filter by alert state. Defaults to all states."
+        },
+        {
+          "name": "severity",
+          "type": "string",
+          "isRequired": false,
+          "allowedValues": ["critical", "high", "medium", "low", "warning", "note", "error"],
+          "description": "Filter by security severity level."
+        },
+        {
+          "name": "tool_name",
+          "type": "string",
+          "isRequired": false,
+          "description": "Filter by analysis tool name (e.g. 'CodeQL')."
+        },
+        {
+          "name": "ref",
+          "type": "string",
+          "isRequired": false,
+          "description": "Filter to alerts on a specific Git ref (e.g. 'refs/heads/main')."
+        }
+      ]
+    },
+    {
+      "name": "get-code-scanning-alert",
+      "description": "Get full details of a single GitHub code scanning alert, including rule description, CWE tags, tool version, exact file location, and dismissal information.",
+      "params": [
+        {
+          "name": "owner",
+          "type": "string",
+          "isRequired": true,
+          "description": "GitHub organisation or user name."
+        },
+        {
+          "name": "repo",
+          "type": "string",
+          "isRequired": true,
+          "description": "Repository name without owner."
+        },
+        {
+          "name": "alert_number",
+          "type": "integer",
+          "isRequired": true,
+          "description": "The alert number (from list-code-scanning-alerts or the GitHub URL)."
+        }
+      ]
+    },
+    {
+      "name": "list-dependabot-alerts",
+      "description": "List Dependabot vulnerability alerts for a repository or organisation. Returns alert number, state, severity, package ecosystem and name, GHSA/CVE IDs, CVSS score, EPSS percentage, and the first patched version. Use owner + repo for repository scope; omit repo for org-level. Requires the 'Dependabot alerts: Read' scope.",
+      "params": [
+        {
+          "name": "owner",
+          "type": "string",
+          "isRequired": true,
+          "description": "GitHub organisation or user name."
+        },
+        {
+          "name": "repo",
+          "type": "string",
+          "isRequired": false,
+          "description": "Repository name without owner. Omit to query org-level alerts."
+        },
+        {
+          "name": "state",
+          "type": "string",
+          "isRequired": false,
+          "allowedValues": ["open", "dismissed", "fixed", "auto_dismissed"],
+          "description": "Filter by alert state."
+        },
+        {
+          "name": "severity",
+          "type": "string",
+          "isRequired": false,
+          "allowedValues": ["low", "medium", "high", "critical"],
+          "description": "Filter by severity."
+        },
+        {
+          "name": "ecosystem",
+          "type": "string",
+          "isRequired": false,
+          "description": "Filter by package ecosystem (e.g. 'npm', 'pip', 'maven', 'rubygems', 'nuget', 'cargo')."
+        },
+        {
+          "name": "package",
+          "type": "string",
+          "isRequired": false,
+          "description": "Filter by package name (e.g. 'lodash')."
+        }
+      ]
+    },
+    {
+      "name": "get-dependabot-alert",
+      "description": "Get full details of a single Dependabot alert, including advisory description, CVSS vector, EPSS score, CWE identifiers, vulnerable version range, and first patched version.",
+      "params": [
+        {
+          "name": "owner",
+          "type": "string",
+          "isRequired": true,
+          "description": "GitHub organisation or user name."
+        },
+        {
+          "name": "repo",
+          "type": "string",
+          "isRequired": true,
+          "description": "Repository name without owner."
+        },
+        {
+          "name": "alert_number",
+          "type": "integer",
+          "isRequired": true,
+          "description": "The alert number (from list-dependabot-alerts or the GitHub URL)."
+        }
+      ]
+    },
+    {
+      "name": "list-secret-scanning-alerts",
+      "description": "List GitHub secret scanning alerts for a repository or organisation. Returns alert number, state, secret type, validity, whether the secret was publicly leaked, and whether push protection was bypassed. The actual secret value is never returned. Use owner + repo for repository scope; omit repo for org-level. Requires the 'Secret scanning alerts: Read' scope.",
+      "params": [
+        {
+          "name": "owner",
+          "type": "string",
+          "isRequired": true,
+          "description": "GitHub organisation or user name."
+        },
+        {
+          "name": "repo",
+          "type": "string",
+          "isRequired": false,
+          "description": "Repository name without owner. Omit to query org-level alerts."
+        },
+        {
+          "name": "state",
+          "type": "string",
+          "isRequired": false,
+          "allowedValues": ["open", "resolved"],
+          "description": "Filter by alert state."
+        },
+        {
+          "name": "secret_type",
+          "type": "string",
+          "isRequired": false,
+          "description": "Filter by secret type slug (e.g. 'github_personal_access_token', 'mailchimp_api_key')."
+        }
+      ]
+    }
+  ]
+}
