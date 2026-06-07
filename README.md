@@ -39,7 +39,7 @@ go install github.com/dipsylala/ghas-mcp@latest
 Download the binary for your platform from [Releases](https://github.com/dipsylala/ghas-mcp/releases) and place it somewhere on your `PATH`.
 
 | Platform | File |
-|---|---|
+| --- | --- |
 | Windows (amd64) | `ghas-mcp-windows-amd64.exe` |
 | Windows (arm64) | `ghas-mcp-windows-arm64.exe` |
 | macOS (Apple Silicon) | `ghas-mcp-darwin-arm64` |
@@ -65,7 +65,7 @@ The server resolves a GitHub token in this order:
 ### Token scopes required
 
 | Alert type | Classic PAT | Fine-grained PAT |
-|---|---|---|
+| --- | --- | --- |
 | Code scanning | `security_events` | Code scanning alerts: **Read** |
 | Dependabot | `security_events` | Dependabot alerts: **Read** |
 | Secret scanning | `security_events` | Secret scanning alerts: **Read** |
@@ -114,7 +114,7 @@ Any MCP-compatible client that supports `stdio` transport works. Set `command` t
 ## Flags
 
 | Flag | Description |
-|---|---|
+| --- | --- |
 | `--version` | Print version and exit |
 | `--verbose` | Write logs to stderr |
 | `--log <path>` | Write logs to a file instead of stderr |
@@ -123,22 +123,26 @@ Logging is disabled by default so it does not interfere with the stdio JSON-RPC 
 
 ## Example prompts
 
-```
+```text
 Show me all open code scanning alerts in my-org/api-service
 ```
-```
+
+```text
 What is the full detail of code scanning alert #12 in my-org/api-service?
 Include the CWE, the file, and whether it has been dismissed.
 ```
-```
+
+```text
 List all critical Dependabot alerts across the my-org organisation.
 Group them by ecosystem.
 ```
-```
+
+```text
 Is the lodash vulnerability in my-org/frontend fixed yet?
 What version should I upgrade to?
 ```
-```
+
+```text
 Are there any open secret scanning alerts in my-org/backend that
 involve tokens which are still active?
 ```
