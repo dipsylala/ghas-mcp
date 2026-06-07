@@ -29,6 +29,7 @@ type listDependabotAlertsRequest struct {
 	Severity    string // low | medium | high | critical
 	Ecosystem   string // pip | npm | etc.
 	PackageName string
+	MaxResults  int // 0 = no user-imposed cap (server hard limit: 2000)
 }
 
 func parseListDependabotAlertsRequest(args map[string]interface{}) (*listDependabotAlertsRequest, error) {
@@ -42,6 +43,7 @@ func parseListDependabotAlertsRequest(args map[string]interface{}) (*listDependa
 	ecosystem, _ := extractOptionalString(args, "ecosystem")
 	pkg, _ := extractOptionalString(args, "package")
 
+	maxResults := extractInt(args, "max_results", 0)
 	return &listDependabotAlertsRequest{
 		Owner:       owner,
 		Repo:        repo,
@@ -49,6 +51,7 @@ func parseListDependabotAlertsRequest(args map[string]interface{}) (*listDependa
 		Severity:    severity,
 		Ecosystem:   ecosystem,
 		PackageName: pkg,
+		MaxResults:  maxResults,
 	}, nil
 }
 
@@ -163,12 +166,32 @@ func buildDependabotListResult(scope string, req *listDependabotAlertsRequest, a
 		filters["package"] = req.PackageName
 	}
 
-	return map[string]interface{}{
+	// Apply max_results cap if set; also flag if the server pagination limit was hit.
+	totalFetched := len(summaries)
+	truncated := false
+	if req.MaxResults > 0 && totalFetched > req.MaxResults {
+		summaries = summaries[:req.MaxResults]
+		truncated = true
+	} else if totalFetched >= 2000 { // 2000 = maxPages(20) * perPage(100) in api/client.go
+		truncated = true
+	}
+
+	result := map[string]interface{}{
 		"scope":           scope,
 		"total_count":     len(summaries),
 		"filters_applied": filters,
 		"alerts":          summaries,
 	}
+	if truncated {
+		result["truncated"] = true
+		result["total_fetched"] = totalFetched
+		if req.MaxResults > 0 {
+			result["truncation_reason"] = fmt.Sprintf("max_results cap of %d applied; %d total alerts were fetched", req.MaxResults, totalFetched)
+		} else {
+			result["truncation_reason"] = "server pagination limit of 2000 results reached; use filter parameters to narrow results"
+		}
+	}
+	return result
 }
 
 // ---- get-dependabot-alert ----

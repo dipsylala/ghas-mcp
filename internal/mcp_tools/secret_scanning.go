@@ -21,6 +21,7 @@ type listSecretScanningAlertsRequest struct {
 	Repo       string // empty → org-level
 	State      string // open | resolved
 	SecretType string // e.g. "mailchimp_api_key"
+	MaxResults int    // 0 = no user-imposed cap (server hard limit: 2000)
 }
 
 func parseListSecretScanningAlertsRequest(args map[string]interface{}) (*listSecretScanningAlertsRequest, error) {
@@ -32,11 +33,13 @@ func parseListSecretScanningAlertsRequest(args map[string]interface{}) (*listSec
 	state, _ := extractOptionalString(args, "state")
 	secretType, _ := extractOptionalString(args, "secret_type")
 
+	maxResults := extractInt(args, "max_results", 0)
 	return &listSecretScanningAlertsRequest{
 		Owner:      owner,
 		Repo:       repo,
 		State:      state,
 		SecretType: secretType,
+		MaxResults: maxResults,
 	}, nil
 }
 
@@ -128,10 +131,30 @@ func buildSecretScanningListResult(scope string, req *listSecretScanningAlertsRe
 		filters["secret_type"] = req.SecretType
 	}
 
-	return map[string]interface{}{
+	// Apply max_results cap if set; also flag if the server pagination limit was hit.
+	totalFetched := len(summaries)
+	truncated := false
+	if req.MaxResults > 0 && totalFetched > req.MaxResults {
+		summaries = summaries[:req.MaxResults]
+		truncated = true
+	} else if totalFetched >= 2000 { // 2000 = maxPages(20) * perPage(100) in api/client.go
+		truncated = true
+	}
+
+	result := map[string]interface{}{
 		"scope":           scope,
 		"total_count":     len(summaries),
 		"filters_applied": filters,
 		"alerts":          summaries,
 	}
+	if truncated {
+		result["truncated"] = true
+		result["total_fetched"] = totalFetched
+		if req.MaxResults > 0 {
+			result["truncation_reason"] = fmt.Sprintf("max_results cap of %d applied; %d total alerts were fetched", req.MaxResults, totalFetched)
+		} else {
+			result["truncation_reason"] = "server pagination limit of 2000 results reached; use filter parameters to narrow results"
+		}
+	}
+	return result
 }

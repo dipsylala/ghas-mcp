@@ -23,12 +23,13 @@ func init() {
 // ---- list-code-scanning-alerts ----
 
 type listCodeScanningAlertsRequest struct {
-	Owner    string
-	Repo     string // empty → org-level
-	State    string // open | dismissed | fixed (default: open)
-	Severity string // critical | high | medium | low | warning | note | error
-	ToolName string
-	Ref      string
+	Owner      string
+	Repo       string // empty → org-level
+	State      string // open | dismissed | fixed (default: open)
+	Severity   string // critical | high | medium | low | warning | note | error
+	ToolName   string
+	Ref        string
+	MaxResults int // 0 = no user-imposed cap (server hard limit: 2000)
 }
 
 func parseListCodeScanningAlertsRequest(args map[string]interface{}) (*listCodeScanningAlertsRequest, error) {
@@ -42,13 +43,15 @@ func parseListCodeScanningAlertsRequest(args map[string]interface{}) (*listCodeS
 	toolName, _ := extractOptionalString(args, "tool_name")
 	ref, _ := extractOptionalString(args, "ref")
 
+	maxResults := extractInt(args, "max_results", 0)
 	return &listCodeScanningAlertsRequest{
-		Owner:    owner,
-		Repo:     repo,
-		State:    state,
-		Severity: severity,
-		ToolName: toolName,
-		Ref:      ref,
+		Owner:      owner,
+		Repo:       repo,
+		State:      state,
+		Severity:   severity,
+		ToolName:   toolName,
+		Ref:        ref,
+		MaxResults: maxResults,
 	}, nil
 }
 
@@ -160,12 +163,32 @@ func buildCodeScanningListResult(scope string, req *listCodeScanningAlertsReques
 		filters["ref"] = req.Ref
 	}
 
-	return map[string]interface{}{
+	// Apply max_results cap if set; also flag if the server pagination limit was hit.
+	totalFetched := len(summaries)
+	truncated := false
+	if req.MaxResults > 0 && totalFetched > req.MaxResults {
+		summaries = summaries[:req.MaxResults]
+		truncated = true
+	} else if totalFetched >= 2000 { // 2000 = maxPages(20) * perPage(100) in api/client.go
+		truncated = true
+	}
+
+	result := map[string]interface{}{
 		"scope":           scope,
 		"total_count":     len(summaries),
 		"filters_applied": filters,
 		"alerts":          summaries,
 	}
+	if truncated {
+		result["truncated"] = true
+		result["total_fetched"] = totalFetched
+		if req.MaxResults > 0 {
+			result["truncation_reason"] = fmt.Sprintf("max_results cap of %d applied; %d total alerts were fetched", req.MaxResults, totalFetched)
+		} else {
+			result["truncation_reason"] = "server pagination limit of 2000 results reached; use filter parameters to narrow results"
+		}
+	}
+	return result
 }
 
 // ---- get-code-scanning-alert ----

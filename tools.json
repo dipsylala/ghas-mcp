@@ -41,6 +41,12 @@
           "type": "string",
           "isRequired": false,
           "description": "Filter to alerts on a specific Git ref (e.g. 'refs/heads/main')."
+        },
+        {
+          "name": "max_results",
+          "type": "integer",
+          "isRequired": false,
+          "description": "Maximum number of alerts to return. If the result set is truncated, the response includes truncated=true, total_fetched, and a truncation_reason. Omit to return all results up to the server limit of 2000."
         }
       ]
     },
@@ -109,6 +115,12 @@
           "type": "string",
           "isRequired": false,
           "description": "Filter by package name (e.g. 'lodash')."
+        },
+        {
+          "name": "max_results",
+          "type": "integer",
+          "isRequired": false,
+          "description": "Maximum number of alerts to return. If the result set is truncated, the response includes truncated=true, total_fetched, and a truncation_reason. Omit to return all results up to the server limit of 2000."
         }
       ]
     },
@@ -164,6 +176,12 @@
           "type": "string",
           "isRequired": false,
           "description": "Filter by secret type slug (e.g. 'github_personal_access_token', 'mailchimp_api_key')."
+        },
+        {
+          "name": "max_results",
+          "type": "integer",
+          "isRequired": false,
+          "description": "Maximum number of alerts to return. If the result set is truncated, the response includes truncated=true, total_fetched, and a truncation_reason. Omit to return all results up to the server limit of 2000."
         }
       ]
     }
