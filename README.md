@@ -176,6 +176,7 @@ An alternative approach would be a set of agent skills that instruct the LLM to 
 The `gh` CLI is a good option for general GitHub tasks (issues, PRs, releases). For GHAS specifically — where the field names are non-obvious, pagination is important, and the data is security-sensitive — a typed MCP tool is the more reliable and auditable choice.
 
 ## Security notes
+
 - Secret values are **never** returned by any tool - only metadata (type, state, validity flag).
 - The server is read-only. It cannot dismiss, reopen, or modify any alert.
 - Token is read once at startup from the environment; it is never logged.
