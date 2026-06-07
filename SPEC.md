@@ -10,7 +10,7 @@ It describes every tool, its parameters, response fields, known constraints, and
 ghas-mcp exposes five read-only tools covering three GitHub Advanced Security alert surfaces:
 
 | Category | Tools |
-|---|---|
+| --- | --- |
 | Code scanning | `list-code-scanning-alerts`, `get-code-scanning-alert` |
 | Dependabot | `list-dependabot-alerts`, `get-dependabot-alert` |
 | Secret scanning | `list-secret-scanning-alerts` |
@@ -35,7 +35,7 @@ Returns a list of code scanning alerts for a repository or organisation, with on
 #### Parameters
 
 | Name | Type | Required | Allowed values | Description |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `owner` | string | yes | — | GitHub org or user name |
 | `repo` | string | no | — | Repository name (without owner). Omit for org scope |
 | `state` | string | no | `open` `dismissed` `fixed` | Filter by alert state (default: all) |
@@ -82,7 +82,7 @@ Returns full details for a single code scanning alert, including the rule's comp
 #### Parameters
 
 | Name | Type | Required | Description |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `owner` | string | yes | GitHub org or user name |
 | `repo` | string | yes | Repository name (without owner) |
 | `alert_number` | integer | yes | Alert number from `list-code-scanning-alerts` or the GitHub URL |
@@ -139,7 +139,7 @@ Returns a list of Dependabot vulnerability alerts for a repository or organisati
 #### Parameters
 
 | Name | Type | Required | Allowed values | Description |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `owner` | string | yes | — | GitHub org or user name |
 | `repo` | string | no | — | Repository name. Omit for org scope |
 | `state` | string | no | `open` `dismissed` `fixed` `auto_dismissed` | Filter by state (default: all) |
@@ -189,7 +189,7 @@ Returns the full advisory details for a single Dependabot alert, including the c
 #### Parameters
 
 | Name | Type | Required | Description |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `owner` | string | yes | GitHub org or user name |
 | `repo` | string | yes | Repository name (without owner) |
 | `alert_number` | integer | yes | Alert number from `list-dependabot-alerts` or the GitHub URL |
@@ -244,7 +244,7 @@ Returns metadata for secret scanning alerts. **The actual secret value is never 
 #### Parameters
 
 | Name | Type | Required | Allowed values | Description |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `owner` | string | yes | — | GitHub org or user name |
 | `repo` | string | no | — | Repository name. Omit for org scope |
 | `state` | string | no | `open` `resolved` | Filter by state (default: all) |
@@ -307,6 +307,7 @@ Returns metadata for secret scanning alerts. **The actual secret value is never 
 ### Prioritise secrets by risk
 
 When triaging secret scanning alerts, prioritise by:
+
 1. `validity == "active"` — the secret is confirmed live
 2. `publicly_leaked == true` — the secret has been public
 3. `push_protection_bypassed == true` — bypassed a control, indicating intent
@@ -325,7 +326,7 @@ When a tool cannot complete, it returns a JSON object with a single `error` fiel
 Common errors:
 
 | Error pattern | Likely cause |
-|---|---|
+| --- | --- |
 | `token not found` | `GITHUB_TOKEN` is unset and no gh CLI session exists |
 | `GitHub API error 401` | Token is invalid or expired |
 | `GitHub API error 403` | Token lacks the required scope for this alert type |
