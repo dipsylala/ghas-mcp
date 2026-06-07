@@ -15,6 +15,16 @@ ghas-mcp exposes five read-only tools covering three GitHub Advanced Security al
 | Dependabot | `list-dependabot-alerts`, `get-dependabot-alert` |
 | Secret scanning | `list-secret-scanning-alerts` |
 
+## Design rationale
+
+This server is implemented as an MCP tool rather than a set of agent skills (instructions that tell the LLM to call `gh api` directly) for the following reasons:
+
+- **Schema enforcement**: Tool parameters are validated by the MCP protocol before any GitHub API call is made. Invalid severity values, missing required fields, or wrong types are rejected immediately rather than producing a malformed API request.
+- **Deterministic output**: The GitHub REST API uses inconsistent field names (e.g. `security_severity_level` vs `rule.severity`). The server normalises these to a stable, predictable structure so the LLM always receives the same field names regardless of the alert type.
+- **Pagination with a safety cap**: `gh api --paginate` fetches everything with no limit. This server caps at 2000 results and sets `truncated: true` so the LLM can inform the user and suggest narrowing filters.
+- **Client portability**: Skills that shell out to `gh` require the client to have terminal access. This MCP server works in Claude Desktop, VS Code, Cursor, and any other MCP-compatible client, regardless of whether a shell is available.
+- **Auditability**: A single read-only binary with no write operations and no network listener is easier to audit than a general-purpose shell wrapper.
+
 ### General rules
 
 - **Scope**: Supply `owner` + `repo` for repository-level queries. Supply only `owner` for org-level queries.

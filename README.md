@@ -160,8 +160,22 @@ involve tokens which are still active?
 
 Produces binaries for all five platforms in `dist/`.
 
-## Security notes
+## Why MCP rather than agent skills?
 
+An alternative approach would be a set of agent skills that instruct the LLM to call `gh api` directly. That works for ad-hoc use, but has meaningful drawbacks for security-adjacent tooling:
+
+| | `gh api` + skill | ghas-mcp |
+| --- | --- | --- |
+| **Input validation** | LLM constructs the URL and params from memory — error-prone | JSON schema enforced at the protocol level before any API call |
+| **Output normalisation** | Raw GitHub API fields (e.g. `security_severity_level`) reach the LLM as-is | Fields are renamed, filtered, and normalised to consistent names |
+| **Pagination** | LLM must remember to pass `--paginate`; no result cap | Automatic, with a 2000-item hard cap and `truncated` flag when hit |
+| **Client compatibility** | Requires shell access — won't work in Claude Desktop without a terminal | Works in any MCP-compatible client regardless of shell access |
+| **Token handling** | `gh auth login` handles credentials; no env var required | Same — `gh auth login` works with no env var needed. The token is read once at process start and never passed through LLM-generated strings |
+| **Determinism** | Non-deterministic — the LLM reconstructs the call each time | Deterministic — the tool schema defines exactly what can be called and how |
+
+The `gh` CLI is a good option for general GitHub tasks (issues, PRs, releases). For GHAS specifically — where the field names are non-obvious, pagination is important, and the data is security-sensitive — a typed MCP tool is the more reliable and auditable choice.
+
+## Security notes
 - Secret values are **never** returned by any tool - only metadata (type, state, validity flag).
 - The server is read-only. It cannot dismiss, reopen, or modify any alert.
 - Token is read once at startup from the environment; it is never logged.
